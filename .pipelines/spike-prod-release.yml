@@ -1,0 +1,40 @@
+pr: none
+trigger: none
+
+stages:
+- template: ./templates/template-stage-mock-deploy-region.yml
+  parameters:
+    sector: "Canary"
+    regions:
+    - A
+    - B
+    dependsOn: []
+- template: ./templates/template-stage-mock-deploy-region.yml
+  parameters:
+    sector: "Low Traffic"
+    regions:
+    - C
+    - D
+    - E
+    - F
+    - G
+    dependsOn:
+    - A
+    - B
+- template: ./templates/template-stage-mock-deploy-region.yml
+  parameters:
+    sector: "US"
+    regions:
+    - H
+    - I
+    - J
+    - K
+    - L
+    - M
+    dependsOn:
+    - C
+    - D
+    - E
+    - F
+    - G
+  

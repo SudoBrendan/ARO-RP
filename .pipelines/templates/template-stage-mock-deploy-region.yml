@@ -1,0 +1,37 @@
+parameters:
+- name: "sector"
+  type: string
+  default: ""
+- name: "regions"
+  type: object
+  default: {}
+- name: "dependsOn"
+  type: object
+  default: []
+
+stages:
+- ${{ each region in parameters.regions }}
+  - stage: "${{ region }}"
+    displayName: "${{ parameters.sector }}: ${{ region }}"
+    dependsOn: ${{ parameters.dependsOn }}
+    jobs:
+    - job: "Deploy ${{ region }}"
+      steps:
+      - script: |
+          echo "MOCK DEPLOY STARTED FOR ${{ region }}"
+          echo "MOCK DEPLOY COMPLETED FOR ${{ region }}"
+    - job: "E2E Test ${{ region }}"
+      steps:
+      - script: |
+          echo "MOCK E2E STARTED FOR ${{ region }}"
+          echo "MOCK E2E COMPLETED FOR ${{ region }}"
+    - job: "Billing Wait For ${{ region }}"
+      steps:
+      - script: |
+          echo "MOCK BILLING WAIT STARTED FOR ${{ region }}"
+          echo "MOCK BILLING WAIT COMPLETED FOR ${{ region }}"
+    - job: "Billing E2E Test ${{ region }}"
+      steps:
+      - script: |
+          echo "MOCK BILLING E2E STARTED FOR ${{ region }}"
+          echo "MOCK BILLING E2E COMPLETED FOR ${{ region }}"
