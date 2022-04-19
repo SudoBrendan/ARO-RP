@@ -1,4 +1,5 @@
 parameters:
+# these are the new vars we'd need to add
 - name: "sector"
   type: string
   default: ""
@@ -8,6 +9,43 @@ parameters:
 - name: "dependsOn"
   type: object
   default: []
+# we'd add the "regular" variables as we have them now for a "real" deployment (as seen in ../prod-release-tag.yml)
+# - name: environment
+#   type: string
+#   default: ""
+# - name: rpMode
+#   type: string
+#   default: ""
+# - name: aroVersionStorageAccount
+#   type: string
+#   default: ""
+# - name: configFileName
+#   type: string
+#   default: ""
+# - name: azureDevOpsJSONSPN
+#   type: string
+#   default: ""
+# - name: vsoProjectID
+#   type: string
+#   default: ""
+# - name: azureDevOpsE2EJSONSPN
+#   type: string
+#   default: ""
+# - name: e2eSubscription
+#   type: string
+#   default: ""
+# - name: billingE2EPipelineName
+#   type: string
+#   default: ""
+# - name: billingE2EBranchName
+#   type: string
+#   default: ""
+# - name: imageTag
+#   type: string
+#   default: ""
+# - name: rpImageAcr
+#   type: string
+#   default: ""
 
 stages:
 - ${{ each region in parameters.regions }}

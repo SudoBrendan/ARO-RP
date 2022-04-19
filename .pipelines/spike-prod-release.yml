@@ -5,6 +5,9 @@ stages:
 - template: ./templates/template-stage-mock-deploy-region.yml
   parameters:
     sector: "Canary"
+    # it's very unfortunate, but variables can only be strings at this time - once arrays are supported,
+    # we can define regions in lists as named variables we can place in "regions" and "dependsOn" - e.g. ${{ variables.canaryRegions }}
+    # for now, we need to do some checking by eye to verify that the correct regions/dependsOn are set and updated correctly.
     regions:
     - A
     - B
@@ -37,4 +40,3 @@ stages:
     - E
     - F
     - G
-  
