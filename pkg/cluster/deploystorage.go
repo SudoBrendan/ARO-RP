@@ -58,7 +58,7 @@ func (m *manager) ensureResourceGroup(ctx context.Context) error {
 		if group.Tags == nil {
 			group.Tags = map[string]*string{}
 		}
-		group.Tags["purge"] = to.StringPtr("true")
+		group.Tags["purge"] = to.StringPtr("false")
 	}
 
 	// According to https://stackoverflow.microsoft.com/a/245391/62320,
