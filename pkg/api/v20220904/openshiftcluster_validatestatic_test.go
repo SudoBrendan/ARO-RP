@@ -15,7 +15,6 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/Azure/ARO-RP/pkg/api"
-	apiValidate "github.com/Azure/ARO-RP/pkg/api/validate"
 	"github.com/Azure/ARO-RP/pkg/util/version"
 	"github.com/Azure/ARO-RP/test/validate"
 )
@@ -84,8 +83,9 @@ func validOpenShiftCluster(name, location string) *OpenShiftCluster {
 				ClientID:     "11111111-1111-1111-1111-111111111111",
 			},
 			NetworkProfile: NetworkProfile{
-				PodCIDR:     "10.128.0.0/14",
-				ServiceCIDR: "172.30.0.0/16",
+				SoftwareDefinedNetwork: SoftwareDefinedNetworkOVNKubernetes,
+				PodCIDR:                "10.128.0.0/14",
+				ServiceCIDR:            "172.30.0.0/16",
 			},
 			MasterProfile: MasterProfile{
 				VMSize:           "Standard_D8s_v3",
@@ -193,10 +193,6 @@ func runTests(t *testing.T, mode testMode, tests []*validateTest) {
 }
 
 func TestOpenShiftClusterStaticValidate(t *testing.T) {
-	clusterName19 := "19characters-aaaaaa"
-	clusterName30 := "thisis30characterslong-aaaaaa"
-	nonZonalRegion := "australiasoutheast"
-
 	commonTests := []*validateTest{
 		{
 			name: "valid",
@@ -229,38 +225,10 @@ func TestOpenShiftClusterStaticValidate(t *testing.T) {
 			},
 			wantErr: "400: InvalidParameter: location: The provided location 'invalid' is invalid.",
 		},
-		{
-			name:        "valid - zonal regions can exceed max cluster name length",
-			clusterName: &clusterName30,
-		},
-	}
-
-	createTests := []*validateTest{
-		{
-			name:        "invalid - non-zonal regions cannot exceed max cluster name length on cluster create",
-			clusterName: &clusterName30,
-			location:    &nonZonalRegion,
-			wantErr:     fmt.Sprintf("400: InvalidParameter: name: The provided cluster name '%s' exceeds the maximum cluster name length of '%d'.", clusterName30, apiValidate.MaxClusterNameLength),
-		},
-		{
-			name:        "valid - non-zonal region less than max cluster name length",
-			clusterName: &clusterName19,
-			location:    &nonZonalRegion,
-		},
-	}
-
-	updateTests := []*validateTest{
-		{
-			name:        "valid - existing cluster names > max cluster name length still work on cluster update",
-			clusterName: &clusterName30,
-			location:    &nonZonalRegion,
-		},
 	}
 
 	runTests(t, testModeCreate, commonTests)
 	runTests(t, testModeUpdate, commonTests)
-	runTests(t, testModeCreate, createTests)
-	runTests(t, testModeUpdate, updateTests)
 }
 
 func TestOpenShiftClusterStaticValidateProperties(t *testing.T) {
@@ -481,7 +449,29 @@ func TestOpenShiftClusterStaticValidateServicePrincipalProfile(t *testing.T) {
 }
 
 func TestOpenShiftClusterStaticValidateNetworkProfile(t *testing.T) {
-	tests := []*validateTest{
+	createTests := []*validateTest{
+		{
+			name: "SoftwareDefinedNetwork valid with OpenShiftSDN",
+			modify: func(oc *OpenShiftCluster) {
+				oc.Properties.NetworkProfile.SoftwareDefinedNetwork = SoftwareDefinedNetworkOpenShiftSDN
+			},
+		},
+		{
+			name: "SoftwareDefinedNetwork invalid when empty",
+			modify: func(oc *OpenShiftCluster) {
+				oc.Properties.NetworkProfile.SoftwareDefinedNetwork = ""
+			},
+			wantErr: "400: InvalidParameter: properties.networkProfile.SoftwareDefinedNetwork: The provided SoftwareDefinedNetwork '' is invalid.",
+		},
+		{
+			name: "SoftwareDefinedNetwork invalid when not predefined name",
+			modify: func(oc *OpenShiftCluster) {
+				oc.Properties.NetworkProfile.SoftwareDefinedNetwork = "InvalidSDN"
+			},
+			wantErr: "400: InvalidParameter: properties.networkProfile.SoftwareDefinedNetwork: The provided SoftwareDefinedNetwork 'InvalidSDN' is invalid.",
+		},
+	}
+	commonTests := []*validateTest{
 		{
 			name: "valid",
 		},
@@ -529,8 +519,9 @@ func TestOpenShiftClusterStaticValidateNetworkProfile(t *testing.T) {
 		},
 	}
 
-	runTests(t, testModeCreate, tests)
-	runTests(t, testModeUpdate, tests)
+	runTests(t, testModeCreate, createTests)
+	runTests(t, testModeCreate, commonTests)
+	runTests(t, testModeUpdate, commonTests)
 }
 
 func TestOpenShiftClusterStaticValidateMasterProfile(t *testing.T) {
@@ -907,6 +898,13 @@ func TestOpenShiftClusterStaticValidateDelta(t *testing.T) {
 		{
 			name:   "clientSecret change",
 			modify: func(oc *OpenShiftCluster) { oc.Properties.ServicePrincipalProfile.ClientSecret = "invalid" },
+		},
+		{
+			name: "SoftwareDefinedNetwork change",
+			modify: func(oc *OpenShiftCluster) {
+				oc.Properties.NetworkProfile.SoftwareDefinedNetwork = SoftwareDefinedNetworkOpenShiftSDN
+			},
+			wantErr: "400: PropertyChangeNotAllowed: properties.networkProfile.softwareDefinedNetwork: Changing property 'properties.networkProfile.softwareDefinedNetwork' is not allowed.",
 		},
 		{
 			name:    "podCidr change",
